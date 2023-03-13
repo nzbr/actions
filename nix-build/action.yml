@@ -22,7 +22,12 @@ runs:
     - name: Build ${{ inputs.expression }} 🛠️
       shell: bash
       run: |
-        nix build -L ${{ inputs.expression }} |& sed -uE 's/^(trace: +)?warning:(\s+|$)/::warning::/;s/^(trace: +)?error:(\s+|$)/::error::/;s/^trace:(\s+|$)/::notice::trace: /'
+        JSON=$(mktemp)
+        (nix build -L ${{ inputs.expression }} >$JSON) |& sed -uE 's/^(trace: +)?warning:(\s+|$)/::warning::/;s/^(trace: +)?error:(\s+|$)/::error::/;s/^trace:(\s+|$)/::notice::trace: /'
+        DRV=$(jq -r .[0].outputs.out <$JSON)
+        echo "- Built $DRV" >> $GITHUB_STEP_SUMMARY
+        echo "    - $(nix show-derivation -r $DRV | jq 'keys[]' | wc -l) derivations in closure" >> $GITHUB_STEP_SUMMARY
+        echo "    - $(nix path-info -S --json $DRV | xargs numfmt --to=iec-i --suffix=B --format='%.3f') total" >> $GITHUB_STEP_SUMMARY
 
     - name: Cache result 🚚
       if: ${{ inputs.cache == 'true' }}

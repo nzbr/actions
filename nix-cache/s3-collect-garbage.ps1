@@ -65,6 +65,9 @@ $queue = New-Object System.Collections.Generic.Queue[string]
 } | Out-Null
 
 Write-Host "::notice:: Found $($queue.Count) GC roots"
+if (Test-Path env:GITHUB_STEP_SUMMARY) {
+  Write-Output "- $($queue.Count) GC roots" >> $env:GITHUB_STEP_SUMMARY
+}
 
 $i = 0
 while ($queue.Count -gt 0) {
@@ -88,6 +91,9 @@ while ($queue.Count -gt 0) {
 }
 
 Write-Host "::notice:: Found $($narinfos.Count) referenced derivations ($(($nars.Count + $narinfos.Count)) objects)"
+if (Test-Path env:GITHUB_STEP_SUMMARY) {
+  Write-Output "- $($narinfos.Count) referenced derivations" >> $env:GITHUB_STEP_SUMMARY
+}
 
 $allItems = @(Get-S3Object -BucketName $bucket -Region $region -ProfileName $s3_profile -EndpointUrl $endpoint | % { $_.Key })
 $relevantItems = @($allItems | ? { $_ -match '^(nar/[a-z0-9]+\.nar.*|[a-z0-9]+\.narinfo)$' })
@@ -98,7 +104,16 @@ $toDelete = @($relevantItems | ? { ! ($nars.Contains($_) -or $narinfos.Contains(
 
 Write-Host "::notice:: Deleting $($toDelete.Length) objects"
 
+$totalSize = 0
 for ($i = 0; $i -lt $toDelete.Count; $i++) {
   Progress -Activity "Deleting objects" -Status "$($i + 1)/$($toDelete.Count)" -PercentComplete ($i / $toDelete.Count * 100)
+  $obj = $(Get-S3Object -BucketName $bucket -Region $region -ProfileName $s3_profile -EndpointUrl $endpoint -Key $($toDelete[$i]))
+  $totalSize += $obj.Size
   Remove-S3Object -BucketName $bucket -Region $region -ProfileName $s3_profile -EndpointUrl $endpoint -Key $($toDelete[$i]) -Force | Out-Null
+}
+
+Write-Host "::notice:: Deleted $($toDelete.Length) objects ($($totalSize / 1024d / 1024d) MB)"
+if (Test-Path env:GITHUB_STEP_SUMMARY) {
+  Write-Output "- Deleted $($toDelete.Length) objects" >> $env:GITHUB_STEP_SUMMARY
+  Write-Output "    - $($totalSize / 1024d / 1024d) MB" >> $env:GITHUB_STEP_SUMMARY
 }

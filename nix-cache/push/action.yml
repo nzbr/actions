@@ -30,4 +30,6 @@ runs:
 
     - name: Copy to cache 🚚
       shell: bash
-      run: nix copy --to "s3://nzbr-nix-cache?region=eu-central-1&endpoint=s3.eu-central-1.wasabisys.com&profile=nix-cache" "${{ inputs.derivation }}"
+      run:
+        nix copy --to "s3://nzbr-nix-cache?region=eu-central-1&endpoint=s3.eu-central-1.wasabisys.com&profile=nix-cache" "${{ inputs.derivation }}"
+        echo "- Pushed ${{ inputs.derivation }} to cache"

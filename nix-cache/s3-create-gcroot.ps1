@@ -15,3 +15,7 @@ $tempfile = New-TemporaryFile
 $args | ? { $_ -match '/nix/store/([a-z0-9]+)-.*' } | % { $Matches[1] } > $tempfile.FullName
 Write-S3Object -BucketName $bucket -Region $region -ProfileName $s3_profile -EndpointUrl $endpoint -Key "${gcrootsDir}/$(git rev-parse HEAD)$($env:GCROOT_SUFFIX)" -File $tempfile.FullName | Out-Null
 Remove-Item $tempfile.FullName | Out-Null
+
+if (Test-Path env:GITHUB_STEP_SUMMARY) {
+  Write-Output "- GC root ${gcrootsDir}/$(git rev-parse HEAD)$($env:GCROOT_SUFFIX) created" >> $env:GITHUB_STEP_SUMMARY
+}
