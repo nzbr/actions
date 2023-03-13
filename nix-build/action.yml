@@ -29,7 +29,7 @@ runs:
         echo "derivation=$DRV" >> $GITHUB_OUTPUT
         echo "- Built $DRV" >> $GITHUB_STEP_SUMMARY
         echo "    - $(nix show-derivation -r $DRV | jq 'keys[]' | wc -l) derivations in closure" >> $GITHUB_STEP_SUMMARY
-        echo "    - $(nix path-info -S --json $DRV | xargs numfmt --to=iec-i --suffix=B --format='%.3f') total" >> $GITHUB_STEP_SUMMARY
+        echo "    - $(nix path-info -S --json $DRV | jq -r '.[0].closureSize' | xargs numfmt --to=iec-i --suffix=B --format='%.3f') total" >> $GITHUB_STEP_SUMMARY
 
     - name: Cache result 🚚
       if: ${{ inputs.cache == 'true' }}
