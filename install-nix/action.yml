@@ -1,0 +1,21 @@
+runs:
+  using: 'composite'
+  steps:
+    - name: Check for nix ✅
+      id: check-nix
+      shell: bash
+      run: |
+        if command -v nix &> /dev/null
+        then
+          echo "nix-found=true" | tee -a $GITHUB_OUTPUT
+        else
+          echo "nix-found=false" | tee -a $GITHUB_OUTPUT
+        fi
+
+    - if: ${{ steps.check-nix.outputs.nix-found != 'true' }}
+      uses: cachix/install-nix-action@v20
+      with:
+        extra_nix_config: |
+          access-tokens = github.com=${{ github.token }}
+          trusted-public-keys = nzbr-nix-cache.s3.eu-central-1.wasabisys.com:3BzCCe4Frvvwamd5wibtMAcEKwbVs4y2xKUR2vQ8gIo= cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
+          substituters = https://nzbr-nix-cache.s3.eu-central-1.wasabisys.com https://cache.nixos.org/

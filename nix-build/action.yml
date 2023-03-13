@@ -1,0 +1,16 @@
+inputs:
+  expression:
+    description: 'Nix expression to build'
+    type: string
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install Nix ❄️
+      uses: ./install-nix
+
+    - name: Build ${{ inputs.expression }} 🛠️
+      shell: bash
+      run: |
+        nix build -L "${{ inputs.expression }}" |& sed -uE 's/^(trace: +)?warning:(\s+|$)/::warning::/;s/^(trace: +)?error:(\s+|$)/::error::/;s/^trace:(\s+|$)/::notice::trace: /'

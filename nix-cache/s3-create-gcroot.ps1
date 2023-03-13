@@ -1,0 +1,17 @@
+#!/usr/bin/env pwsh
+# code: language=powershell tabSize=2
+
+Import-Module AWSPowerShell -ErrorAction Stop
+
+$s3_profile = 'nix-cache'
+$endpoint = 'https://s3.eu-central-1.wasabisys.com'
+$region = 'eu-central-1'
+$bucket = 'nzbr-nix-cache'
+$gcrootsDir = 'gcroots'
+
+Write-Host "::notice:: Creating GC root ${gcrootsDir}/$(git rev-parse HEAD)$($env:GCROOT_SUFFIX)"
+
+$tempfile = New-TemporaryFile
+$args | ? { $_ -match '/nix/store/([a-z0-9]+)-.*' } | % { $Matches[1] } > $tempfile.FullName
+Write-S3Object -BucketName $bucket -Region $region -ProfileName $s3_profile -EndpointUrl $endpoint -Key "${gcrootsDir}/$(git rev-parse HEAD)$($env:GCROOT_SUFFIX)" -File $tempfile.FullName | Out-Null
+Remove-Item $tempfile.FullName | Out-Null

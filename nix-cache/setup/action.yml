@@ -1,0 +1,26 @@
+inputs:
+  secret-key:
+    description: 'Secret decryption key'
+    type: string
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install Nix ❄️
+      uses: ./install-nix
+
+    - name: Decrypt secrets 🔓
+      env:
+        SECRET_DECRYPTION_KEY: '${{ inputs.secret-key }}'
+      shell: bash
+      run: |
+        KEYFILE=$(mktemp)
+        echo "$SECRET_DECRYPTION_KEY" | base64 -d > "$KEYFILE"
+        nix run nixpkgs#rage -- -d -i "$KEYFILE" -o "${{ github.action_path }}/../cache-priv-key.pem" "${{ github.action_path }}/../cache-priv-key.pem.age"
+        mkdir -p $HOME/.aws
+        nix run nixpkgs#rage -- -d -i "$KEYFILE" -o "${HOME}/.aws/credentials" "${{ github.action_path }}/../s3-credentials.age"
+
+    - name: Install S3 Module 🪣
+      shell: pwsh
+      run: Install-Module -Name AWSPowerShell -Force -SkipPublisherCheck

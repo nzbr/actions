@@ -1,0 +1,24 @@
+name: Run Garbage Collector ♻️
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: '0 18 * * 5'
+
+jobs:
+  gc:
+    name: Collect Garbage ♻️
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup ⚙️
+        uses: ./nix-cache/setup
+        with:
+          secret-key: ${{ secrets.SECRET_DECRYPTION_KEY }}
+
+      - name: Run GC ♻️
+        shell: pwsh
+        run: |
+          & "./nix-cache/s3-collect-garbage.ps1"
