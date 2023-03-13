@@ -1,15 +1,12 @@
 inputs:
   secret-key:
     description: 'Secret decryption key'
-    type: string
     required: true
   derivation:
     description: 'Store path to push to cache'
-    type: string
     required: true
   cache-tag:
     description: 'Tag to use for the cache'
-    type: string
     required: true
 
 runs:

@@ -1,20 +1,16 @@
 inputs:
   expression:
     description: 'Nix expression to build'
-    type: string
     required: true
   cache:
     description: 'Whether to cache the result'
-    type: string
     required: false
     default: false
   cache-tag:
     description: 'Tag to use for the cache'
-    type: string
     required: false
   secret-key:
     description: 'Secret decryption key'
-    type: string
     required: true
 
 runs:
@@ -29,7 +25,7 @@ runs:
         nix build -L ${{ inputs.expression }} |& sed -uE 's/^(trace: +)?warning:(\s+|$)/::warning::/;s/^(trace: +)?error:(\s+|$)/::error::/;s/^trace:(\s+|$)/::notice::trace: /'
 
     - name: Cache result 🚚
-      if: ${{ inputs.cache }}
+      if: ${{ inputs.cache == 'true' }}
       uses: nzbr/actions/nix-cache/push@main
       with:
         secret-key: ${{ inputs.secret-key }}

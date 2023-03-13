@@ -1,7 +1,6 @@
 inputs:
   secret-key:
     description: 'Secret decryption key'
-    type: string
     required: true
 
 runs:
