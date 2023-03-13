@@ -20,11 +20,13 @@ runs:
       uses: nzbr/actions/install-nix@main
 
     - name: Build ${{ inputs.expression }} 🛠️
+      id: build
       shell: bash
       run: |
         JSON=$(mktemp)
-        (nix build -L ${{ inputs.expression }} >$JSON) |& sed -uE 's/^(trace: +)?warning:(\s+|$)/::warning::/;s/^(trace: +)?error:(\s+|$)/::error::/;s/^trace:(\s+|$)/::notice::trace: /'
+        (nix build -L ${{ inputs.expression }} --json >$JSON) |& sed -uE 's/^(trace: +)?warning:(\s+|$)/::warning::/;s/^(trace: +)?error:(\s+|$)/::error::/;s/^trace:(\s+|$)/::notice::trace: /'
         DRV=$(jq -r .[0].outputs.out <$JSON)
+        echo "derivation=$DRV" >> $GITHUB_OUTPUT
         echo "- Built $DRV" >> $GITHUB_STEP_SUMMARY
         echo "    - $(nix show-derivation -r $DRV | jq 'keys[]' | wc -l) derivations in closure" >> $GITHUB_STEP_SUMMARY
         echo "    - $(nix path-info -S --json $DRV | xargs numfmt --to=iec-i --suffix=B --format='%.3f') total" >> $GITHUB_STEP_SUMMARY
@@ -33,6 +35,6 @@ runs:
       if: ${{ inputs.cache == 'true' }}
       uses: nzbr/actions/nix-cache/push@main
       with:
-        secret-key: ${{ inputs.secret-key }}
-        derivation: ${{ inputs.expression }}
+        derivation: ${{ steps.build.outputs.derivation }}
         cache-tag: ${{ inputs.cache-tag }}
+        secret-key: ${{ inputs.secret-key }}
