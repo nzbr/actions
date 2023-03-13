@@ -3,6 +3,19 @@ inputs:
     description: 'Nix expression to build'
     type: string
     required: true
+  cache:
+    description: 'Whether to cache the result'
+    type: string
+    required: false
+    default: false
+  cache-tag:
+    description: 'Tag to use for the cache'
+    type: string
+    required: false
+  secret-key:
+    description: 'Secret decryption key'
+    type: string
+    required: true
 
 runs:
   using: 'composite'
@@ -13,4 +26,12 @@ runs:
     - name: Build ${{ inputs.expression }} 🛠️
       shell: bash
       run: |
-        nix build -L "${{ inputs.expression }}" |& sed -uE 's/^(trace: +)?warning:(\s+|$)/::warning::/;s/^(trace: +)?error:(\s+|$)/::error::/;s/^trace:(\s+|$)/::notice::trace: /'
+        nix build -L ${{ inputs.expression }} |& sed -uE 's/^(trace: +)?warning:(\s+|$)/::warning::/;s/^(trace: +)?error:(\s+|$)/::error::/;s/^trace:(\s+|$)/::notice::trace: /'
+
+    - name: Cache result 🚚
+      if: ${{ inputs.cache }}
+      uses: ./nix-cache/push
+      with:
+        secret-key: ${{ inputs.secret-key }}
+        derivation: ${{ inputs.expression }}
+        cache-tag: ${{ inputs.cache-tag }}
