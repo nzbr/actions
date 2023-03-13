@@ -22,7 +22,7 @@ runs:
 
     - name: Sign derivations ✒️
       shell: bash
-      run: nix store sign --key-file "$HOME/cache-priv-key.pem" --recursive "${{ inputs.derivation }}"
+      run: nix store sign --key-file "${{ github.action_path }}/../cache-priv-key.pem" --recursive "${{ inputs.derivation }}"
 
     - name: Create GC Root ♻️
       env:
