@@ -21,7 +21,7 @@ runs:
   using: 'composite'
   steps:
     - name: Install Nix ❄️
-      uses: ./install-nix
+      uses: nzbr/actions/install-nix@main
 
     - name: Build ${{ inputs.expression }} 🛠️
       shell: bash
@@ -30,7 +30,7 @@ runs:
 
     - name: Cache result 🚚
       if: ${{ inputs.cache }}
-      uses: ./nix-cache/push
+      uses: nzbr/actions/nix-cache/push@main
       with:
         secret-key: ${{ inputs.secret-key }}
         derivation: ${{ inputs.expression }}

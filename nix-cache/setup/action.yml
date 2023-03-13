@@ -8,7 +8,7 @@ runs:
   using: 'composite'
   steps:
     - name: Install Nix ❄️
-      uses: ./install-nix
+      uses: nzbr/actions/install-nix@main
 
     - name: Decrypt secrets 🔓
       env:

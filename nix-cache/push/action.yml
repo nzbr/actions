@@ -16,7 +16,7 @@ runs:
   using: 'composite'
   steps:
     - name: Setup ⚙️
-      uses: ./nix-cache/setup
+      uses: nzbr/actions/nix-cache/setup@main
       with:
         secret-key: ${{ inputs.secret-key }}
 
