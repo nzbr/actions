@@ -76,18 +76,26 @@ while ($queue.Count -gt 0) {
 
   Progress -Activity "Resolving references" -Status "$i/$($queue.Count)/$($i + $queue.Count)" -PercentComplete ($i / ($i + $queue.Count) * 100)
 
-  $narinfo = Get-S3ObjectContent "${hash}.narinfo"
-  $narinfo | ? { $_ -match '^URL: (.*)$' } | % { $nars.Add($Matches[1]) } | Out-Null
+  try {
+    $narinfo = Get-S3ObjectContent "${hash}.narinfo"
 
-  @(
-    $narinfo
-    | ? { $_ -match '^References: (.*)$' }
-    | % { $Matches[1] -split ' ' | ? { $_ -match '^([a-z0-9]+)-.*' } | % { $Matches[1] } }
-    | % { $_ }
-  ) | ? { ! $narinfos.Contains("${_}.narinfo") } | % {
-    $narinfos.Add("${_}.narinfo")
-    $queue.Enqueue($_)
-  } | Out-Null
+    $narinfo | ? { $_ -match '^URL: (.*)$' } | % { $nars.Add($Matches[1]) } | Out-Null
+
+    @(
+      $narinfo
+      | ? { $_ -match '^References: (.*)$' }
+      | % { $Matches[1] -split ' ' | ? { $_ -match '^([a-z0-9]+)-.*' } | % { $Matches[1] } }
+      | % { $_ }
+    ) | ? { ! $narinfos.Contains("${_}.narinfo") } | % {
+      $narinfos.Add("${_}.narinfo")
+      $queue.Enqueue($_)
+    } | Out-Null
+  }
+  catch {
+    Write-Error $_
+    continue
+  }
+
 }
 
 Write-Host "> Found $($narinfos.Count) referenced derivations ($(($nars.Count + $narinfos.Count)) objects)"
