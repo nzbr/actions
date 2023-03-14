@@ -17,5 +17,5 @@ Write-S3Object -BucketName $bucket -Region $region -ProfileName $s3_profile -End
 Remove-Item $tempfile.FullName | Out-Null
 
 if (Test-Path env:GITHUB_STEP_SUMMARY) {
-  Write-Output "- GC root ${gcrootsDir}/$(git rev-parse HEAD)$($env:GCROOT_SUFFIX) created" >> $env:GITHUB_STEP_SUMMARY
+  Write-Output "- Garbage collector root ``${gcrootsDir}/$(git rev-parse HEAD)$($env:GCROOT_SUFFIX)`` created" >> $env:GITHUB_STEP_SUMMARY
 }
