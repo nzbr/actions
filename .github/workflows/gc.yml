@@ -19,6 +19,4 @@ jobs:
           secret-key: ${{ secrets.SECRET_DECRYPTION_KEY }}
 
       - name: Run GC ♻️
-        shell: pwsh
-        run: |
-          & "./nix-cache/s3-collect-garbage.ps1"
+        run: pwsh "./nix-cache/s3-collect-garbage.ps1"

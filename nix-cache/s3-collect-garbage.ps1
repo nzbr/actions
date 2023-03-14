@@ -19,9 +19,7 @@ function Get-S3ObjectContent {
   )
 
   Read-S3Object -BucketName $bucket -Region $region -ProfileName $s3_profile -EndpointUrl $endpoint -Key $Key -File $tempfile.FullName | Out-Null
-  $content = Get-Content $tempfile.FullName
-
-  return $content
+  return Get-Content $tempfile.FullName
 }
 
 function Progress {
@@ -39,6 +37,9 @@ function Progress {
   }
 }
 
+# Get all objects as the first step, so we don't delete files that are uploaded while the GC runs
+$allItems = @(Get-S3Object -BucketName $bucket -Region $region -ProfileName $s3_profile -EndpointUrl $endpoint | % { $_.Key })
+
 $nars = New-Object System.Collections.Generic.HashSet[string]
 $narinfos = New-Object System.Collections.Generic.HashSet[string]
 $queue = New-Object System.Collections.Generic.Queue[string]
@@ -54,7 +55,7 @@ $queue = New-Object System.Collections.Generic.Queue[string]
     return $true
   }
   catch {
-    Write-Error $_
+    Write-Error "Could not get metadata for ${_}.narinfo"
     return $false
   }
 } | % {
@@ -103,7 +104,7 @@ if (Test-Path env:GITHUB_STEP_SUMMARY) {
   Write-Output "- $($narinfos.Count) referenced derivations" >> $env:GITHUB_STEP_SUMMARY
 }
 
-$allItems = @(Get-S3Object -BucketName $bucket -Region $region -ProfileName $s3_profile -EndpointUrl $endpoint | % { $_.Key })
+# $allItems is fetched at the start of the script
 $relevantItems = @($allItems | ? { $_ -match '^(nar/[a-z0-9]+\.nar.*|[a-z0-9]+\.narinfo)$' })
 
 Write-Host "> Bucket contains $($relevantItems.Count) NARs and NAR infos ($($allItems.Count) total)"
@@ -123,5 +124,5 @@ for ($i = 0; $i -lt $toDelete.Count; $i++) {
 Write-Host "> Deleted $($toDelete.Length) objects ($($totalSize / 1024d / 1024d) MB)"
 if (Test-Path env:GITHUB_STEP_SUMMARY) {
   Write-Output "- Deleted $($toDelete.Length) objects" >> $env:GITHUB_STEP_SUMMARY
-  Write-Output "    - $($totalSize / 1024d / 1024d) MB" >> $env:GITHUB_STEP_SUMMARY
+  Write-Output "    - $("{0:0.000}" -f ($totalSize / 1024d / 1024d)) MB" >> $env:GITHUB_STEP_SUMMARY
 }
