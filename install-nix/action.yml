@@ -15,7 +15,8 @@ runs:
     - if: ${{ steps.check-nix.outputs.nix-found != 'true' }}
       uses: cachix/install-nix-action@v22
       with:
+        github_access_token: ${{ github.token }}
         extra_nix_config: |
-          access-tokens = github.com=${{ github.token }}
+          auto-optimise-store = true
           trusted-public-keys = nzbr-nix-cache.s3.eu-central-1.wasabisys.com:3BzCCe4Frvvwamd5wibtMAcEKwbVs4y2xKUR2vQ8gIo= cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
           substituters = https://nzbr-nix-cache.s3.eu-central-1.wasabisys.com https://cache.nixos.org/
