@@ -22,4 +22,4 @@ runs:
 
     - name: Install S3 Module 🪣
       shell: pwsh
-      run: Install-Module -Name AWSPowerShell -Force -SkipPublisherCheck
+      run: Install-Module -Name AWSPowerShell -Force -SkipPublisherCheck -RequiredVersion 4.1.475
