@@ -13,7 +13,7 @@ runs:
         fi
 
     - if: ${{ steps.check-nix.outputs.nix-found != 'true' }}
-      uses: cachix/install-nix-action@6004951b182f8860210c8d6f0d808ec5b1a33d28 # v25
+      uses: cachix/install-nix-action@9f70348d77d0422624097c4b7a75563948901306 # v29
       with:
         github_access_token: ${{ github.token }}
         extra_nix_config: |
