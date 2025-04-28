@@ -12,11 +12,41 @@ runs:
           echo "nix-found=false" | tee -a $GITHUB_OUTPUT
         fi
 
-    - if: ${{ steps.check-nix.outputs.nix-found != 'true' }}
-      uses: cachix/install-nix-action@08dcb3a5e62fa31e2da3d490afc4176ef55ecd72 # v30
-      with:
-        github_access_token: ${{ github.token }}
-        extra_nix_config: |
-          auto-optimise-store = true
-          trusted-public-keys = nzbr-nix-cache.s3.eu-central-1.wasabisys.com:3BzCCe4Frvvwamd5wibtMAcEKwbVs4y2xKUR2vQ8gIo= cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
-          substituters = https://nzbr-nix-cache.s3.eu-central-1.wasabisys.com https://cache.nixos.org/
+    # TODO: Replace with action once released
+    - name: Install Lix ❄️
+      if: steps.check-nix.outputs.nix-found == 'false'
+      shell: bash
+      run: |
+        curl -sSf -L https://install.lix.systems/lix | sudo sh -s -- install --no-confirm
+
+    - name: Configure nix 🔧
+      if: steps.check-nix.outputs.nix-found == 'false'
+      shell: bash
+      run: |
+        cat <<EOF | sudo tee -a /etc/nix/nix.conf > /dev/null
+        extra-substituters = https://nzbr-nix-cache.s3.eu-central-1.wasabisys.com
+        extra-trusted-public-keys = nzbr-nix-cache.s3.eu-central-1.wasabisys.com:3BzCCe4Frvvwamd5wibtMAcEKwbVs4y2xKUR2vQ8gIo=
+        access-tokens = github.com=${{ github.token }}
+        EOF
+
+    - name: Configure shell 🔧
+      if: steps.check-nix.outputs.nix-found == 'false'
+      shell: bash
+      run: |
+        . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+        echo "NIX_PROFILES=${NIX_PROFILES}" | tee -a $GITHUB_ENV
+        echo "NIX_SSL_CERT_FILE=${NIX_SSL_CERT_FILE}" | tee -a $GITHUB_ENV
+        echo "XDG_DATA_DIRS=${XDG_DATA_DIRS}" | tee -a $GITHUB_ENV
+        echo "PATH=${PATH}" | tee -a $GITHUB_ENV
+
+    - name: Print nix version
+      if: steps.check-nix.outputs.nix-found == 'false'
+      shell: bash
+      run: |
+        nix --version
+
+    - name: Print nix config
+      if: steps.check-nix.outputs.nix-found == 'false'
+      shell: bash
+      run: |
+        grep -v access-tokens /etc/nix/nix.conf # Hide github token
