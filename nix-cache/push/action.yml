@@ -21,6 +21,11 @@ runs:
       shell: bash
       run: nix store sign --key-file "${{ github.action_path }}/../cache-priv-key.pem" --recursive "${{ inputs.derivation }}"
 
+    - name: Ensure correct nix-cache-info
+      shell: pwsh
+      run: |
+        & "${{ github.action_path }}/../s3-setup-cache.ps1"
+
     - name: Create GC Root ♻️
       env:
         GCROOT_SUFFIX: -${{ inputs.cache-tag }}
